@@ -1,0 +1,230 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// 1. BST 结点结构体（和题目给出完全一致）
+typedef struct BiTNode
+{
+    int stu_no;              /* 学号，关键字 */
+    char name[10];           /* 姓名 */
+    char course[30];         /* 所选课程名 */
+    struct BiTNode *lchild;  /* 左孩子 */
+    struct BiTNode *rchild;  /* 右孩子 */
+} BiTNode, *BSTree;
+
+// 在 BST 中查找 key，找到返回结点指针，找不到返回 NULL
+BiTNode* SearchBST(BSTree T, int key)
+{
+    if (T == NULL || T->stu_no == key)
+        return T;
+    if (key < T->stu_no)
+        return SearchBST(T->lchild, key);
+    else
+        return SearchBST(T->rchild, key);
+}
+
+// 插入结点 s 到二叉排序树，成功返回 1，关键字已存在返回 0
+int InsertBST(BSTree *pT, BiTNode *s)
+{
+    if (*pT == NULL)
+    {
+        *pT = s;
+        return 1;
+    }
+    if (s->stu_no == (*pT)->stu_no)
+    {
+        printf("该学号已存在，不能重复插入！\n");
+        return 0;
+    }
+    else if (s->stu_no < (*pT)->stu_no)
+        return InsertBST(&((*pT)->lchild), s);
+    else
+        return InsertBST(&((*pT)->rchild), s);
+}
+
+// 删除结点：BST 删除辅助函数
+void DeleteNode(BSTree *p)
+{
+    BiTNode *q, *s;
+    if ((*p)->rchild == NULL)
+    {
+        q = *p;
+        *p = (*p)->lchild;
+        free(q);
+    }
+    else if ((*p)->lchild == NULL)
+    {
+        q = *p;
+        *p = (*p)->rchild;
+        free(q);
+    }
+    else
+    {
+        q = *p;
+        s = (*p)->lchild;
+        while (s->rchild != NULL)
+        {
+            q = s;
+            s = s->rchild;
+        }
+        (*p)->stu_no = s->stu_no;
+        strcpy((*p)->name, s->name);
+        strcpy((*p)->course, s->course);
+        if (q != *p)
+            q->rchild = s->lchild;
+        else
+            q->lchild = s->lchild;
+        free(s);
+    }
+}
+
+// 删除学号 key 的结点
+int DeleteBST(BSTree *pT, int key)
+{
+    if (*pT == NULL)
+        return 0;
+    if (key == (*pT)->stu_no)
+    {
+        DeleteNode(pT);
+        return 1;
+    }
+    else if (key < (*pT)->stu_no)
+        return DeleteBST(&((*pT)->lchild), key);
+    else
+        return DeleteBST(&((*pT)->rchild), key);
+}
+
+// 创建二叉排序树，加载题目给定的 5 条记录
+void CreateBST(BSTree *pT)
+{
+    *pT = NULL;
+    int no[] = {2001, 2002, 2003, 2004, 2005};
+    char nm[][10] = {"高小青", "谢小峰", "陈小洪", "马小玲", "李小彬"};
+    char co[][30] = {
+        "《人工智能导论》",
+        "《数据结构与算法》",
+        "《计算机网络》",
+        "《操作系统原理》",
+        "《软件工程导论》"
+    };
+
+    for (int i = 0; i < 5; i++)
+    {
+        BiTNode *s = (BiTNode *)malloc(sizeof(BiTNode));
+        s->stu_no = no[i];
+        strcpy(s->name, nm[i]);
+        strcpy(s->course, co[i]);
+        s->lchild = NULL;
+        s->rchild = NULL;
+        InsertBST(pT, s);
+    }
+    printf("二叉排序树创建完成！\n");
+}
+
+// 中序遍历，按学号升序输出
+void InOrder(BSTree T)
+{
+    if (T != NULL)
+    {
+        InOrder(T->lchild);
+        printf("%d\t%s\t%s\n", T->stu_no, T->name, T->course);
+        InOrder(T->rchild);
+    }
+}
+
+// 菜单
+void menu()
+{
+    printf("\n===== 学生选课 BST 管理系统 =====\n");
+    printf("1 - 创建选课二叉排序树\n");
+    printf("2 - 中序遍历（升序显示全部）\n");
+    printf("3 - 按学号查找学生\n");
+    printf("4 - 插入新选课学生\n");
+    printf("5 - 删除退课学生（按学号）\n");
+    printf("0 - 退出程序\n");
+    printf("请输入选择：");
+}
+
+int main(void)
+{
+    BSTree T = NULL;
+    int op;
+    int key;
+    BiTNode *s;
+    BiTNode *res;
+
+    while (1)
+    {
+        menu();
+        scanf("%d", &op);
+        switch (op)
+        {
+            case 1:
+                CreateBST(&T);
+                break;
+            case 2:
+                if (T == NULL)
+                {
+                    printf("树为空，请先创建！\n");
+                }
+                else
+                {
+                    printf("\n学号\t姓名\t所选课程\n");
+                    InOrder(T);
+                }
+                break;
+            case 3:
+                if (T == NULL)
+                {
+                    printf("树为空，请先创建！\n");
+                    break;
+                }
+                printf("请输入待查找学号：");
+                scanf("%d", &key);
+                res = SearchBST(T, key);
+                if (res != NULL)
+                {
+                    printf("找到：%d %s %s\n", res->stu_no, res->name, res->course);
+                }
+                else
+                {
+                    printf("未找到该学号学生！\n");
+                }
+                break;
+            case 4:
+                s = (BiTNode *)malloc(sizeof(BiTNode));
+                s->lchild = NULL;
+                s->rchild = NULL;
+                printf("请输入新学生学号：");
+                scanf("%d", &s->stu_no);
+                printf("请输入姓名：");
+                scanf("%s", s->name);
+                printf("请输入课程名：");
+                scanf("%s", s->course);
+                InsertBST(&T, s);
+                break;
+            case 5:
+                if (T == NULL)
+                {
+                    printf("树为空，请先创建！\n");
+                    break;
+                }
+                printf("请输入要删除（退课）的学号：");
+                scanf("%d", &key);
+                if (DeleteBST(&T, key))
+                {
+                    printf("删除成功！\n");
+                }
+                else
+                {
+                    printf("删除失败，无该学号！\n");
+                }
+                break;
+            case 0:
+                printf("程序退出！\n");
+                return 0;
+            default:
+                printf("选项无效，请重新输入！\n");
+        }
+    }
+}
