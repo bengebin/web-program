@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+//欢迎同学们学习编程
 // 1. BST 结点结构体（和题目给出完全一致）
 typedef struct BiTNode
 {
